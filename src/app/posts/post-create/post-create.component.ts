@@ -1,21 +1,30 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { NgForm } from '@angular/forms';
+
+import { PostsService } from '../posts.service';
 
 @Component({
   selector: '<app-post-create>',
   templateUrl: './post-create.component.html',
   styleUrls: ['./post-create.component.css']
 })
-export class PostCreateComponent {
+export class PostCreateComponent implements OnInit {
   enteredTitle = '';
   enteredContent = '';
-  @Output() postCreated = new EventEmitter();
+  // @Output() postCreated = new EventEmitter();
 
-  onAddPost(postInput: HTMLTextAreaElement) {
-    const post = {
-      title: this.enteredTitle,
-      content: this.enteredContent
-    };
-    this.postCreated.emit(post);
+  constructor(public postsService: PostsService) { }
+
+  ngOnInit() {
+
+  }
+
+  onAddPost(form: NgForm) {
+    if (form.invalid) {
+      return;
+    }
+    this.postsService.addPosts(form.value.title, form.value.content);
+    form.resetForm();
   }
 
 }
