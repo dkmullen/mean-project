@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { map } from 'rxjs/operators';
 
 import { Post } from './post.model';
+import { Router } from '@angular/router';
 
 // Injectable is an alt method to listing this service under providers in app.module
 // providing at root makes it available everwhere in the app, and only one copy is ever made
@@ -14,7 +15,7 @@ export class PostsService {
   // a new rxjs Subject with an array of posts as a payload
   private postsUpdated = new Subject<Post[]>();
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private router: Router) {}
 
   getPosts() {
     // use spread operater to copy everything in posts to a new array
@@ -47,17 +48,35 @@ export class PostsService {
     return this.postsUpdated.asObservable();
   }
 
-  addPosts(title: string, content: string) {
+  getPost(id: string) {
+    return this.http.get<{ _id: string, title: string, content: string }>('http://localhost:3000/api/posts/' + id);
+  }
+
+  addPost(title: string, content: string) {
     // const post: Post = {title: title, content: content}; (This is the old way)
     const post: Post = {id: null, title, content};
     this.http.post<{message: string, postId: string}>('http://localhost:3000/api/posts', post)
       .subscribe((responseData) => {
         const id = responseData.postId;
-        post.id = id;
-        console.log(responseData.message);
+        post.id = id; // add the id from the database so post immediately has an id other than null
         this.posts.push(post);
         // This is how we 'emit' our updated array of posts using rxjs
         this.postsUpdated.next([...this.posts]);
+        this.router.navigate(['/']);
+      });
+  }
+
+  updatePost(id: string, title: string, content: string ) {
+    const post: Post = { id, title, content };
+    this.http.put('http://localhost:3000/api/posts/' + id, post)
+      .subscribe(response => {
+        // Below we keep our local copy of posts up to date with the server
+        const updatedPosts = [...this.posts]; //clone the array
+        const oldPostIndex = updatedPosts.findIndex(p => p.id === post.id); //find the old post by id
+        updatedPosts[oldPostIndex] = post; // replace the old post with the new one
+        this.posts = updatedPosts; //update the array
+        this.postsUpdated.next([...this.posts]); //send it out
+        this.router.navigate(['/']);
       });
   }
 
