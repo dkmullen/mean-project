@@ -32,7 +32,8 @@ export class PostsService {
           return {
             title: post.title,
             content: post.content,
-            id: post._id
+            id: post._id,
+            imagePath: post.imagePath
           };
         });
       }))
@@ -49,16 +50,19 @@ export class PostsService {
   }
 
   getPost(id: string) {
-    return this.http.get<{ _id: string, title: string, content: string }>('http://localhost:3000/api/posts/' + id);
+    return this.http.get<{ _id: string, title: string, content: string, imagePath: string }>('http://localhost:3000/api/posts/' + id);
   }
 
-  addPost(title: string, content: string) {
+  addPost(title: string, content: string, image: File) {
     // const post: Post = {title: title, content: content}; (This is the old way)
-    const post: Post = {id: null, title, content};
-    this.http.post<{message: string, postId: string}>('http://localhost:3000/api/posts', post)
+    // const post: Post = {id: null, title, content};
+    const postData = new FormData(); // fd is js object allowing us to combine data and blobs
+    postData.append('title', title);
+    postData.append('content', content);
+    postData.append('image', image, title); // sending this to const storage in posts.js, must match what we ask for there
+    this.http.post<{message: string, post: Post}>('http://localhost:3000/api/posts', postData)
       .subscribe((responseData) => {
-        const id = responseData.postId;
-        post.id = id; // add the id from the database so post immediately has an id other than null
+        const post: Post = {id: responseData.post.id, title, content, imagePath: responseData.post.imagePath};
         this.posts.push(post);
         // This is how we 'emit' our updated array of posts using rxjs
         this.postsUpdated.next([...this.posts]);
@@ -66,13 +70,25 @@ export class PostsService {
       });
   }
 
-  updatePost(id: string, title: string, content: string ) {
-    const post: Post = { id, title, content };
-    this.http.put('http://localhost:3000/api/posts/' + id, post)
+  updatePost(id: string, title: string, content: string, image: File | string ) {
+    let postData: Post | FormData;
+    if (typeof(image) === 'object') {
+      postData = new FormData();
+      postData.append('id', id);
+      postData.append('title', title);
+      postData.append('content', content);
+      postData.append('image', image, title);
+    } else {
+      postData = { id, title, content, imagePath: image };
+    }
+    this.http.put('http://localhost:3000/api/posts/' + id, postData)
       .subscribe(response => {
         // Below we keep our local copy of posts up to date with the server
         const updatedPosts = [...this.posts]; //clone the array
-        const oldPostIndex = updatedPosts.findIndex(p => p.id === post.id); //find the old post by id
+        const oldPostIndex = updatedPosts.findIndex(p => p.id === id); //find the old post by id
+        const post: Post = {
+          id, title, content, imagePath: ''
+        }
         updatedPosts[oldPostIndex] = post; // replace the old post with the new one
         this.posts = updatedPosts; //update the array
         this.postsUpdated.next([...this.posts]); //send it out
