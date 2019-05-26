@@ -26,16 +26,18 @@ export class PostCreateComponent implements OnInit {
 
   ngOnInit() {
     this.form = new FormGroup({
-      'title': new FormControl(null, {
+      title: new FormControl(null, {
         validators: [Validators.required, Validators.minLength(3)]
       }),
-      'content': new FormControl(null, { validators: [Validators.required]}),
+      content: new FormControl(null, { validators: [Validators.required]}),
       image: new FormControl(null, {
         validators: [Validators.required],
         asyncValidators: [mimeType]
       })
     })
     this.route.paramMap.subscribe((paramMap: ParamMap) => {
+      // if we arrive at this page by clicking on an existing post, the route
+      // will have an id, so we populate the form with the post data
       if (paramMap.has('postId')) {
         this.mode = 'edit';
         this.postId = paramMap.get('postId');
@@ -49,14 +51,17 @@ export class PostCreateComponent implements OnInit {
             imagePath: postData.imagePath
           };
           this.form.setValue({
-            'title': this.post.title, 'content': this.post.content, image: this.post.imagePath});
+            title: this.post.title,
+            content: this.post.content,
+            image: this.post.imagePath
+          });
         })
       );
       } else {
         this.mode = 'create';
         this.postId = null;
       }
-    })
+    });
   }
 
   onImagePicked(event: Event) {

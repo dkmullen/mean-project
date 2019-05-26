@@ -13,33 +13,36 @@ import { Router } from '@angular/router';
 export class PostsService {
   private posts: Post[] = [];
   // a new rxjs Subject with an array of posts as a payload
-  private postsUpdated = new Subject<Post[]>();
+  private postsUpdated = new Subject<{posts: Post[], postCount: number}>();
 
   constructor(private http: HttpClient, private router: Router) {}
 
-  getPosts() {
+  getPosts(postsPerPage: number, currentPage: number) {
     // use spread operater to copy everything in posts to a new array
     // return this.posts[] would return only a ref to the array
     // return [...this.posts];
 
+    const queryParams = `?pagesize=${postsPerPage}&page=${currentPage}`;
     // message gets added on the server side
-    this.http.get<{message: string, posts: any }>('http://localhost:3000/api/posts'
+    this.http.get<{message: string, posts: any, maxPosts: number }>('http://localhost:3000/api/posts' + queryParams
       )
       // Purpose of this is to transform the data we get back from the server to match our model
       // specifically removing the underscore in front of id!
       .pipe(map((postData) => { // this map is the rxjs method to apply something to all elements of postData
-        return postData.posts.map(post => {
+        return {posts: postData.posts.map(post => {
           return {
             title: post.title,
             content: post.content,
             id: post._id,
             imagePath: post.imagePath
           };
-        });
+        }),
+        maxPosts: postData.maxPosts
+      };
       }))
-      .subscribe((postData) => {
-        this.posts = postData;
-        this.postsUpdated.next([...this.posts]);
+      .subscribe((transformedPostData) => {
+        this.posts = transformedPostData.posts;
+        this.postsUpdated.next({posts: [...this.posts], postCount: transformedPostData.maxPosts});
       });
   }
 
@@ -61,11 +64,7 @@ export class PostsService {
     postData.append('content', content);
     postData.append('image', image, title); // sending this to const storage in posts.js, must match what we ask for there
     this.http.post<{message: string, post: Post}>('http://localhost:3000/api/posts', postData)
-      .subscribe((responseData) => {
-        const post: Post = {id: responseData.post.id, title, content, imagePath: responseData.post.imagePath};
-        this.posts.push(post);
-        // This is how we 'emit' our updated array of posts using rxjs
-        this.postsUpdated.next([...this.posts]);
+      .subscribe(() => {
         this.router.navigate(['/']);
       });
   }
@@ -83,26 +82,11 @@ export class PostsService {
     }
     this.http.put('http://localhost:3000/api/posts/' + id, postData)
       .subscribe(response => {
-        // Below we keep our local copy of posts up to date with the server
-        const updatedPosts = [...this.posts]; //clone the array
-        const oldPostIndex = updatedPosts.findIndex(p => p.id === id); //find the old post by id
-        const post: Post = {
-          id, title, content, imagePath: ''
-        }
-        updatedPosts[oldPostIndex] = post; // replace the old post with the new one
-        this.posts = updatedPosts; //update the array
-        this.postsUpdated.next([...this.posts]); //send it out
         this.router.navigate(['/']);
       });
   }
 
   deletePost(postId: string) {
-    this.http.delete('http://localhost:3000/api/posts/' + postId)
-      .subscribe(() => {
-        // ie the filter includes any post that doesn't have the id sent in by delete poset
-        const updatedPosts = this.posts.filter(post => post.id !== postId);
-        this.posts = updatedPosts; // remake the official array
-        this.postsUpdated.next([...this.posts]); // send out a copy
-      });
+    return this.http.delete('http://localhost:3000/api/posts/' + postId);
   }
 }

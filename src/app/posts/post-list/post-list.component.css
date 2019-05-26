@@ -16,3 +16,7 @@
 .post-image img {
   width: 100%;
 }
+
+mat-paginator {
+  margin-top: 1rem;
+}

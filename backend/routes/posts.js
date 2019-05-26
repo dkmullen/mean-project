@@ -69,14 +69,30 @@ router.put('/:id',  multer({storage: storage}).single('image'), (req, res, next)
 })
 
 router.get('', (req, res, next) => {
-  Post.find() // returns all entries
+  // get pagination info off the req header coming in
+  const pageSize = +req.query.pagesize; // the last term is up to me
+  const currentPage = +req.query.page; // the '+' converts str to int
+  const postQuery = Post.find(); // returns all entries, unless modified (as below)
+  let fetchedPosts;
+  if (pageSize && currentPage) {
+    postQuery
+    .skip(pageSize * (currentPage - 1)) // skip to the requested page
+    .limit(pageSize);   // fetch only the number of posts in a page
+    // Post.find still operates on the entire db even with this filter, so it could
+    // be inefficient for very large queries
+  }
+  postQuery
     .then(documents => {
-      console.log(documents);
+      fetchedPosts = documents;
+      return Post.count();
+    })
+    .then(count => {
       res.status(200).json({
         message: 'Posts fetched successfully',
-        posts: documents
+        posts: fetchedPosts,
+        maxPosts: count
       })
-    });
+    })
 });
 
 router.get('/:id', (req, res, next) => {

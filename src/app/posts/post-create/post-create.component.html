@@ -1,6 +1,7 @@
 <mat-card>
   <mat-spinner *ngIf="isLoading"></mat-spinner>
-  <form [formGroup]="form" (submit)="onSavePost()" *ngIf="!isLoading"> <!-- the last part links this form to the object behind the scenes-->
+  <!-- [formGroup] links this form to the object behind the scenes-->
+  <form [formGroup]="form" (submit)="onSavePost()" *ngIf="!isLoading">
     <mat-form-field>
       <input
         matInput
