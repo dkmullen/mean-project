@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 
 const postRoutes = require('./routes/posts');
+const userRoutes = require('./routes/user');
 const app = express();
 
 mongoose.connect('mongodb://dkm:roger456@ds149146.mlab.com:49146/dkm-mean-course',
@@ -34,6 +35,7 @@ app.use((req, res, next) => {
 });
 
 app.use('/api/posts', postRoutes);
+app.use('/api/user', userRoutes);
 
 
 module.exports = app;
