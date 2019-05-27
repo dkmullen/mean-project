@@ -14,7 +14,7 @@
         <mat-error *ngIf="emailInput.invalid">Please enter a valid email</mat-error>
     </mat-form-field>
     <mat-form-field>
-      <input 
+      <input
       type="password"
        matInput
        name="password"
@@ -25,6 +25,6 @@
       <mat-error *ngIf="passwordInput.invalid">Please enter a valid password</mat-error>
     </mat-form-field>
     <hr>
-    <button mat-raised-button color="accent" type="submit" >Signup</button>
+    <button mat-raised-button color="accent" type="submit" *ngIf="!isLoading">Signup</button>
   </form>
 </mat-card>
