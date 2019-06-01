@@ -6,6 +6,10 @@ import { map } from 'rxjs/operators';
 import { Post } from './post.model';
 import { Router } from '@angular/router';
 
+import { environment } from '../../environments/environment';
+
+const BACKEND_URL = environment.apiUrl + '/posts/';
+
 // Injectable is an alt method to listing this service under providers in app.module
 // providing at root makes it available everwhere in the app, and only one copy is ever made
 @Injectable({providedIn: 'root'})
@@ -24,7 +28,7 @@ export class PostsService {
 
     const queryParams = `?pagesize=${postsPerPage}&page=${currentPage}`;
     // message gets added on the server side
-    this.http.get<{message: string, posts: any, maxPosts: number }>('http://localhost:3000/api/posts' + queryParams
+    this.http.get<{message: string, posts: any, maxPosts: number }>(BACKEND_URL + queryParams
       )
       // Purpose of this is to transform the data we get back from the server to match our model
       // specifically removing the underscore in front of id!
@@ -65,7 +69,7 @@ export class PostsService {
     postData.append('title', title);
     postData.append('content', content);
     postData.append('image', image, title); // sending this to const storage in posts.js, must match what we ask for there
-    this.http.post<{message: string, post: Post}>('http://localhost:3000/api/posts', postData)
+    this.http.post<{message: string, post: Post}>(BACKEND_URL, postData)
       .subscribe(() => {
         this.router.navigate(['/']);
       });
@@ -82,13 +86,13 @@ export class PostsService {
     } else {
       postData = { id, title, content, imagePath: image, creator: null };
     }
-    this.http.put('http://localhost:3000/api/posts/' + id, postData)
+    this.http.put(BACKEND_URL + id, postData)
       .subscribe(response => {
         this.router.navigate(['/']);
       });
   }
 
   deletePost(postId: string) {
-    return this.http.delete('http://localhost:3000/api/posts/' + postId);
+    return this.http.delete(BACKEND_URL + postId);
   }
 }

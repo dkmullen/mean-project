@@ -7,7 +7,7 @@ const postRoutes = require('./routes/posts');
 const userRoutes = require('./routes/user');
 const app = express();
 
-mongoose.connect('mongodb://dkm:roger456@ds149146.mlab.com:49146/dkm-mean-course',
+mongoose.connect('mongodb://dkm:' + process.env.MLAB_PW + '@ds149146.mlab.com:49146/dkm-mean-course',
   { useNewUrlParser: true})
   .then(() => {
     console.log('Connected to database.');
