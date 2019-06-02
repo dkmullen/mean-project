@@ -19,7 +19,7 @@ mongoose.connect('mongodb://dkm:' + process.env.MLAB_PW + '@ds149146.mlab.com:49
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 // allow images to be accessed and forward requests to backend/images
-app.use('/images', express.static(path.join('backend/images')));
+app.use('/images', express.static(path.join('images')));
 
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
