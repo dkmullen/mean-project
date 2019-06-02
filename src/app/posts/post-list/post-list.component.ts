@@ -19,6 +19,7 @@ export class PostListComponent implements OnInit, OnDestroy {
   currentPage = 1;
   pageSizeOptions = [1,2,5,10];
   userId: string;
+  // register this Sub as a var so it can be destroyed
   private postsSub: Subscription;
   isLoading = false;
   userIsAuthenticated = false;
@@ -31,6 +32,7 @@ export class PostListComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.postsService.getPosts(this.postsPerPage, this.currentPage);
     this.userId = this.authService.getUserId();
+    // here we fetch the observable from posts.service and subscribe to it - be sure to unsubscribe too...
     this.postsSub = this.postsService.getPostUpdateListener()
       .subscribe((postData: {posts: Post[], postCount: number}) => {
         this.isLoading = false;

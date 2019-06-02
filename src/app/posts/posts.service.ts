@@ -16,7 +16,7 @@ const BACKEND_URL = environment.apiUrl + '/posts/';
 
 export class PostsService {
   private posts: Post[] = [];
-  // a new rxjs Subject with an array of posts as a payload
+  // a new rxjs Subject (an 'emitter') with an array of posts as a payload
   private postsUpdated = new Subject<{posts: Post[], postCount: number}>();
 
   constructor(private http: HttpClient, private router: Router) {}
@@ -46,14 +46,14 @@ export class PostsService {
       };
       }))
       .subscribe((transformedPostData) => {
-        console.log(transformedPostData)
         this.posts = transformedPostData.posts;
+        // here the Subject 'emits' the post list with 'next()' rather than 'emit
         this.postsUpdated.next({posts: [...this.posts], postCount: transformedPostData.maxPosts});
       });
   }
 
   // postsUpdated is private so it can only be used in this service, but the following
-  // lets us retrieve it in other places for listening
+  // lets us retrieve it in other places for listening, such as in post-list component in ngOnInit
   getPostUpdateListener() {
     return this.postsUpdated.asObservable();
   }
